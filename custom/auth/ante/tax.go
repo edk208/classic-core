@@ -82,19 +82,21 @@ func (tfd TaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, taxes sdk.Coins) error {
 	requiredFees := sdk.Coins{}
 	minGasPrices := ctx.MinGasPrices()
-	minBurnTax := ctx.MinBurnTax()
-	ctx.Logger().Info(fmt.Sprintf("Gas Cost is gas = %s", minBurnTax))
-	if !minGasPrices.IsZero() && !minBurnTax.IsZero(){
+	//minBurnTax := ctx.MinBurnTax()
+	minBurnTax,_ :=  sdk.NewDecFromStr("1.500")
+	//ctx.Logger().Info(fmt.Sprintf("Gas Cost is gas = %s", minBurnTax))
+	//if !minGasPrices.IsZero() && !minBurnTax.IsZero(){
+	if !minGasPrices.IsZero(){
 		requiredFees = make(sdk.Coins, len(minGasPrices))
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 		glDec := sdk.NewDec(int64(gas))
 		for i, gp := range minGasPrices {
-			fee := minBurnTax[0].Amount.Mul(gp.Amount.Mul(glDec))
+			fee := minBurnTax.Mul(gp.Amount.Mul(glDec))
 			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
-		ctx.Logger().Info(fmt.Sprintf("Gas Cost is gas = %d x gasprice %s x burnTax %s", gas, minGasPrices[0], minBurnTax[0]))
+		ctx.Logger().Info(fmt.Sprintf("Gas Cost is gas = %d x Validator Gas price %s x burnTax %s.  total fee is %s", gas, minGasPrices[0], minBurnTax, requiredFees))
 	}
 
 	// Before checking gas prices, remove taxed from fee
