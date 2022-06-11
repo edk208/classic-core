@@ -82,16 +82,19 @@ func (tfd TaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, taxes sdk.Coins) error {
 	requiredFees := sdk.Coins{}
 	minGasPrices := ctx.MinGasPrices()
-	if !minGasPrices.IsZero() {
+	minBurnTax := ctx.MinBurnTax()
+	ctx.Logger().Info(fmt.Sprintf("Gas Cost is gas = %s", minBurnTax))
+	if !minGasPrices.IsZero() && !minBurnTax.IsZero(){
 		requiredFees = make(sdk.Coins, len(minGasPrices))
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 		glDec := sdk.NewDec(int64(gas))
 		for i, gp := range minGasPrices {
-			fee := gp.Amount.Mul(glDec)
+			fee := minBurnTax[0].Amount.Mul(gp.Amount.Mul(glDec))
 			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
+		ctx.Logger().Info(fmt.Sprintf("Gas Cost is gas = %d x gasprice %s x burnTax %s", gas, minGasPrices[0], minBurnTax[0]))
 	}
 
 	// Before checking gas prices, remove taxed from fee

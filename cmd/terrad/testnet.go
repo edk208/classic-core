@@ -69,6 +69,7 @@ Example:
 			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			minGasPrices, _ := cmd.Flags().GetString(server.FlagMinGasPrices)
+			minBurnTax, _ := cmd.Flags().GetString(server.FlagMinBurnTax)
 			nodeDirPrefix, _ := cmd.Flags().GetString(flagNodeDirPrefix)
 			nodeDaemonHome, _ := cmd.Flags().GetString(flagNodeDaemonHome)
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
@@ -76,7 +77,7 @@ Example:
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
 			return InitTestnet(
-				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices, minBurnTax,
 				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
 		},
@@ -89,6 +90,7 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", core.MicroLunaDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(server.FlagMinBurnTax, fmt.Sprintf("0.000006%s", core.MicroLunaDenom), "Minimum burn tax to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
@@ -107,6 +109,7 @@ func InitTestnet(
 	outputDir,
 	chainID,
 	minGasPrices,
+	minBurnTax,
 	nodeDirPrefix,
 	nodeDaemonHome,
 	startingIPAddress,
@@ -125,6 +128,7 @@ func InitTestnet(
 	_, appConfig := initAppConfig()
 	terraappConfig := appConfig.(TerraAppConfig)
 	terraappConfig.MinGasPrices = minGasPrices
+	terraappConfig.MinBurnTax = minBurnTax
 	terraappConfig.API.Enable = true
 	terraappConfig.Telemetry.Enabled = true
 	terraappConfig.Telemetry.PrometheusRetentionTime = 60
